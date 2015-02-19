@@ -1,0 +1,93 @@
+---
+title: "Weight Lifting Excercise Prediction"
+author: "Octaviani Devi"
+date: "19 Feb 2015"
+output: html_document
+---
+
+Executive Summary
+----------
+In this project, Weight Lifting Excercises Dataset from the website http://groupware.les.inf.puc-rio.br/har is used . This is human activity recognition research that focused on discriminating between different activities. The approach is to investigate "how (well)" an activity was performed by the wearer.
+
+Six young health participants were asked to perform one set of 10 repititions of the Unilateral Dumbbell Biceps Curl in five different ways:
+
+- Exactly according to the specificaion (Class A)
+- Throwing the elbows to the front (Class B)
+- Lifting the dumbbell only halfway (Class C)
+- Lowering the dumbbell only halfway (Class D)
+- Throwing the hips to the front (Class E)
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes. In this project will be created a model to predict the manner in which they did the excercise and categorize in those classes above.
+
+The outcome is "classe" variable in the dataset. We may use any of the other variables to predict with and build a model based on those variables.
+
+
+Data Loading and Preprocessing
+--------------
+Before creating the model, we need to choose the variables that we will use in the model and do necessary preprocessing data.
+
+First step is loading the data set. The data set is divided into 2 groups which are training data set and testing data set (only 20 records). Testing data set will be performed the same data processing process as in training data set. Testing data set will be not explained in this report since the grading is done automatically. Below is the dimension of training data set:
+
+```{r echo=FALSE}
+setwd("~/Downloads/02. Coursera/8. Practical Machine Learning/Project/MachineLearning")
+traindt <- read.csv("pml-training.csv", na.strings="NA")
+dim(traindt)
+```
+
+In total there are 19.622 records and 160 columns. Based on observation that has been done,
+there are several columns that will be eliminated. Below is the preprocessing step:
+
+1. Eliminate the first 7 columns. The information in this columns are not related to the outcome, for example column about id, timestamp and username.
+2. Update the data has blank value with NA value.
+3. Eliminate column that contains NA value more than 50% in total data. These columns are not useful for prediction, so we need to excluded it. In total there are 100 columns.
+
+Below is the dimensions of clean training dataset:
+
+```{r echo=FALSE}
+traindt <- traindt[,8-160]
+traindt[traindt == ""] <- NA
+nacolumn <- which(colSums(is.na(traindt)) > 10000)
+cleantraindt <- traindt[,-c(nacolumn)]
+dim(cleantraindt)
+library(randomForest)
+```
+
+
+Prediction Model
+------
+After clean up the training data set, the next step is deciding the model prediction type. In this project, random forest model will be used to predict the outcome value. 
+
+Load library(randomForest)
+```{r echo=FALSE}
+library(randomForest)
+set.seed(120)
+rf_model <- randomForest(classe ~ ., data=cleantraindt)
+```
+
+Below is the confusion matrix of Random Forest model that explain the misscategorize data:
+
+```{r echo=FALSE}
+rf_model
+```
+
+Based on this model, we can see that the model predicts quite well.
+
+(source: https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm)
+
+In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run, as follows:
+
+Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree.
+
+Put each case left out in the construction of the kth tree down the kth tree to get a classification. In this way, a test set classification is obtained for each case in about one-third of the trees. At the end of the run, take j to be the class that got most of the votes every time case n was oob. The proportion of times that j is not equal to the true class of n averaged over all cases is the oob (Out of Bag) error estimate. This has proven to be unbiased in many tests.
+
+
+The sample error prediction is 0 and the OOB estimate of error rate is 0%.
+Below is the variable importance based on the model
+
+```{r echo=FALSE}
+varImpPlot(rf_model , main="Variable Important Plot")
+```
+                            
+Conclusion
+----
+The model that is built in this project can predict accurately the behaviour or manner in which they did the excercise and categorize in the classes that mention before. The prediction method that is use is random forest.
